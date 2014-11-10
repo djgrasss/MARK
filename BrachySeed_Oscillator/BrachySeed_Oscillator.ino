@@ -34,7 +34,7 @@ Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 
 float Amplitude;    // variable to control amplitude. units?
 int Frequency;    // variable to control frequency. Hz
-int Period;        // period of the frequency
+float Period;        // period of the frequency
 
 int freq_incr = 1;   // incrementing value for frequency. delta Hz 
 float amp_incr  = 0.1;   // incrementing value for amplitude. delta PWM value
@@ -48,7 +48,10 @@ float amp_min = 0;    // minimum aplitude value
 //ouput pins
 int Amp_Pin = 3;    // PWM enabled output pins. for Amplitude adjustments
 int Freq_Pin = 8;    // Digital pin. for Frequency adjustments
+int Freq_Pin_2 = 12; // Digital pin for the other half wave of the frequency adjustment pulses to the H bridge
 boolean Freq_State;    // on/off state of frequency modulating pin
+
+
 
 void setup() {
 
@@ -57,6 +60,8 @@ void setup() {
   // define pins as output
   pinMode(Amp_Pin, OUTPUT);
   pinMode(Freq_Pin, OUTPUT);
+  
+  pinMode(Freq_Pin_2, OUTPUT);
   
   // Debugging output
   Serial.begin(9600);
@@ -78,9 +83,10 @@ void setup() {
 Frequency = 0;     // At default state, magnet does not oscillate
 Amplitude = 2.5;  // At default state, current to magnet is half of pwm range
 
-
+// Define default frequency pin states
 Freq_State = HIGH;   // at Defualt, current is ON!: Magnet is on, oscillating at 0 Hz
 digitalWrite(Freq_Pin, Freq_State);
+digitalWrite(Freq_Pin_2, not Freq_State);
 
 // Display defaults
 // (note: line 1 is the second row, since counting begins with 0):
@@ -95,6 +101,9 @@ lcd.print(Frequency);
 lcd.setCursor(10, 1);
 lcd.print(" Hz");
 uint8_t i=0;
+
+// Define default Amplitude output
+analogWrite(Amp_Pin, Amplitude);
 }
 
 void loop() {
@@ -120,6 +129,7 @@ void loop() {
       // Update Freq Display
       lcd.setCursor(6, 1);
       lcd.print(Frequency);
+      lcd.print(" ");
   } 
    if (buttons & BUTTON_DOWN) { 
     // decrease frequency
@@ -130,6 +140,7 @@ void loop() {
       // Update Freq Display
       lcd.setCursor(6, 1);
       lcd.print(Frequency);
+      lcd.print(" ");
    }
    
        if (buttons & BUTTON_RIGHT) { 
@@ -161,21 +172,46 @@ void loop() {
       
   // output freq and amplitude settings 
    // if we are within a tolerance range to the frequency, switch the freq output. this creates oscillations
-  Period = (1/Frequency)*1000;
-  if (millis() % (Period) <= 20 ) { // if we are within 20 msec of the time that the current frequency dictates that we switch pin modes...switch pin mode
-    if (Freq_State = HIGH) {
-      Freq_State = LOW;
-      digitalWrite(Freq_Pin, Freq_State);
-    }
-    else if (Freq_State = LOW) {
+  Period = (1.0/float(Frequency))*1000;
+  if (Frequency == 0) {
+    Period = 0;
+  }
+  if (millis() % int(Period) <= 2 ) { // if we are within 4 msec of the time that the current frequency dictates that we switch pin modes...switch pin mode
+   /*
+    if (Freq_State = LOW) {
       Freq_State = HIGH;
       digitalWrite(Freq_Pin, Freq_State);
     }
-  
+    else {
+      Freq_State = LOW;
+      digitalWrite(Freq_Pin, Freq_State);
     }
-    Serial.print(amp_incr);
+    */
+
+    
+    Freq_State = not Freq_State;
+    digitalWrite(Freq_Pin, Freq_State);
+    digitalWrite(Freq_Pin_2, not Freq_State);
+    
+    Serial.print("hi ");
+    Serial.print(Freq_State);
     Serial.print(" ");
-    Serial.println(Amplitude);
+    Serial.println(not Freq_State);
+    
+    }
+    
+    /*
+    Serial.print(freq_incr);
+    Serial.print(" ");
+    Serial.print(Frequency);
+    Serial.print(" ");
+    Serial.print(int(Period));
+    Serial.print(" ");    
+    Serial.println(millis() % int(Period));
+    */
+    // update Amplitude output
+    analogWrite(Amp_Pin, (Amplitude/5)*255);
+    //Serial.println((Amplitude/5)*255);
 }
 /*
 void Input(Frequency, Amplitude, freq_incr, amp_incr) {
