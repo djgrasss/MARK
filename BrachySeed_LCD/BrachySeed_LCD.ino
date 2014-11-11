@@ -30,10 +30,6 @@ ST7565 glcd(LCD_SID, LCD_SCLK, LCD_A0, LCD_RST, LCD_CS);
 // Create Menu with control pins and address of glcd:
 Menu menu(UP_PIN, DOWN_PIN, SELECT_PIN, &glcd);
 
-//Backlight PWM values:
-uint8_t brightness_levels[7] = { 0, 20, 50, 90, 130, 190, 250 };
-uint8_t brightness_index; // Index of brightness_levels
-
 // a bitmap of the BrachySeed Icon
 static unsigned char __attribute__ ((progmem)) Icon16_glcd_bmp[]={
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x80,0xC0,0x40,0x20,0x20,0x00,0x10,0x10,0x10,0x10,0x08,0x08,0x08,0x08,0x08,0x08,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -62,11 +58,47 @@ PROGMEM const unsigned char logo16_glcd_bmp[]= {
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 
+//Backlight PWM values:
+uint8_t brightness_levels[7] = { 0, 20, 50, 90, 130, 190, 250 };
+uint8_t brightness_index; // Index of brightness_levels
 
-  /*
-0x30, 0xf0, 0xf0, 0xf0, 0xf0, 0x30, 0xf8, 0xbe, 0x9f, 0xff, 0xf8, 0xc0, 0xc0, 0xc0, 0x80, 0x00, 
-0x20, 0x3c, 0x3f, 0x3f, 0x1f, 0x19, 0x1f, 0x7b, 0xfb, 0xfe, 0xfe, 0x07, 0x07, 0x07, 0x03, 0x00, };
+// Frequency and Amplitude values
+const int amp_size = 11;
+const int freq_size = 51;
+
+uint8_t amplitude_levels[amp_size] = { 0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250 };
+uint8_t amplitude_index = 5; // Index of brightness_levels. default set at half of max
+
+uint8_t frequency_levels[freq_size] = {0, 1,2, 3,  4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 };
+
+uint8_t frequency_index = 1; // Index of brightness_levels. default set at 1 Hz
+
+
+// Define variables and output pins for Amp/ freq modulation
+
+float Amplitude;    // variable to control amplitude. 
+int Frequency;    // variable to control frequency. Hz
+float Period;        // period of the frequency
+
+/*
+int freq_incr = 1;   // incrementing value for frequency. delta Hz 
+float amp_incr  = 0.1;   // incrementing value for amplitude. delta PWM value
+
+float freq_max = 50;       // Maximum frequency value. Hz
+float freq_min = 0;       // minimun frequency value. Hz
+
+float amp_max = 5;    // maximum amplitude value
+float amp_min = 0;    // minimum aplitude value
 */
+
+//ouput pins
+int Amp_Pin = 3;    // PWM enabled output pins. for Amplitude adjustments
+int Freq_Pin = 2;    // Digital pin. for Frequency adjustments
+int Freq_Pin_2 = 13; // Digital pin for the other half wave of the frequency adjustment pulses to the H bridge
+boolean Freq_State;    // on/off state of frequency modulating pin
+
+
+
 void setup() {
   pinMode(BACKLIGHT_LED, OUTPUT);
   glcd.begin(0x18); // Initialise LCD
@@ -94,22 +126,159 @@ void setup() {
   glcd.display();
   delay(2000);
   glcd.clear();
+  
+
+// Define Input/Output pins
+
+  // define pins as output
+  pinMode(Amp_Pin, OUTPUT);
+  pinMode(Freq_Pin, OUTPUT);
+  pinMode(Freq_Pin_2, OUTPUT);
+  
+// set default values
+Frequency = 0;     // At default state, magnet does not oscillate
+Amplitude = 2.5;  // At default state, current to magnet is half of pwm range
+
+// Define default frequency pin states
+Freq_State = HIGH;   // at Defualt, current is ON!: Magnet is on, oscillating at 0 Hz
+digitalWrite(Freq_Pin, Freq_State);
+digitalWrite(Freq_Pin_2, not Freq_State);
+
+uint8_t i=0;
+
+// Define default Amplitude output
+analogWrite(Amp_Pin, Amplitude);
+  
 }
 
 // Draw main menu screen:
 void show_main() {
+  // Debugging output
+  int time = millis();
+  Serial.begin(9600);
+  Serial.print("Took "); Serial.print(time); Serial.println(" ms");
+  
   menu.clear(); // Clear menu and display
   
   // If menu.update() called 70 times, light_of() will be called:
   menu.add_timeout_function(70, light_off); 
 
   // Title always shown on first line:
-  menu.set_title("Example Menu:");
+  menu.set_title("Main Menu:");
   
   // Add items with function to be called when selected:
+  menu.add_item("Set Frequency", show_frequency);
+  menu.add_item("Set Amplitude", show_amplitude);
   menu.add_item("Set Backlight", show_brightness);
+  
+  // Display current Frequency and Amplitude Values
+  menu.add_draw_function(draw_current);
+  
 
 }
+// Display current amplitude and frequency values on the Main menu
+void draw_current() {
+  char buf[4];
+  itoa(frequency_index, buf, 10);
+  glcd.drawstring(5, 4, "Current:");
+  glcd.drawstring(30, 5, "Freq:"); 
+  glcd.drawstring(70, 5, buf);
+  glcd.drawstring(90, 5, "Hz");
+  
+  itoa(amplitude_index, buf, 10);
+  glcd.drawstring(30, 7, "Amp:"); 
+  glcd.drawstring(70, 7, buf);
+  glcd.display();
+}
+// Draw frequency display menu:
+void show_frequency() {
+  menu.clear(); 
+  
+  // Back to main menu after 40 a inactive loops:
+  menu.add_timeout_function(40, show_main);
+  
+  menu.add_draw_function(draw_frequency);
+  menu.set_title("Frequency:");
+  
+  // These items will pass their integer values
+  // (1 and -1) to set_brightness:
+  menu.add_item("Up", 1, set_frequency);
+  menu.add_item("Down", -1, set_frequency);
+  
+  menu.add_item("Back", show_main);
+}
+
+// Draw Amplitude menu:
+void show_amplitude() {
+  menu.clear();
+  
+  // Back to main menu after 40 a inactive loops:
+  menu.add_timeout_function(40, show_main);
+  
+  menu.add_draw_function(draw_amplitude);
+  menu.set_title("Amplitude:");
+  
+  // These items will pass their integer values
+  // (1 and -1) to set_brightness:
+  menu.add_item("Up", 1, set_amplitude);
+  menu.add_item("Down", -1, set_amplitude);
+  
+  menu.add_item("Back", show_main);
+}
+
+// Lower Amplitude if dir<0, raise if dir>0
+void set_amplitude(int dir) {
+  if (dir < 0) {
+    if (amplitude_index > 0) amplitude_index--;
+    //Amplitude-= amp_incr;
+  }
+  if (dir > 0) {
+    if (amplitude_index < amp_size - 1) amplitude_index++;
+   // Amplitude+= amp_incr;
+  }
+  
+}
+
+// Lower Frequency if dir<0, raise if dir>0
+void set_frequency(int dir) {
+  if (dir < 0) {
+    if (frequency_index > 0) frequency_index--;
+      //Frequency-= freq_incr;
+  }
+  if (dir > 0) {
+    if (frequency_index < freq_size - 1) frequency_index++;
+      //Frequency += freq_incr;
+  }
+
+}
+
+// Draw lower section of Amplitude screen:
+void draw_amplitude() {
+  char buf[12];
+  // Just display brightness_index as brightness level:
+  itoa(amplitude_index, buf, 10); 
+  glcd.drawstring(LEFT_MARGIN+5, 5, buf);
+  // Visual level display:
+  glcd.drawrect(LEFT_MARGIN+17, 40, 60, 8, BLACK);
+  glcd.fillrect(LEFT_MARGIN+17, 40, 6*amplitude_index, 8, BLACK);
+}
+
+// Draw lower section of Frequency screen:
+void draw_frequency() {
+  char buf[12];
+  // Just display brightness_index as brightness level:
+  itoa(frequency_index, buf, 10); 
+  glcd.drawstring(LEFT_MARGIN+5, 5, buf);
+  // Visual level display:
+  //  To draw a rectangle with no fill which top-left corner were (x0,y0) and which has w of width and h of height,
+  //  we use glcd.drawrect(x0, y0, w, h, color).
+  glcd.drawrect(LEFT_MARGIN+17, 40, 60, 8, BLACK);
+  //  To draw a filled rectangle which top-left corner were (x0,y0) and which has w of width and h of height,
+  //  we use glcd.fillrect(x0, y0, w, h, BLACK);
+  
+  glcd.fillrect(LEFT_MARGIN+17, 40, 1.2*frequency_index, 8, BLACK);
+}
+
 
 // Draw brightness menu:
 void show_brightness() {
@@ -165,6 +334,63 @@ void loop() {
   // Now we just need to update the menu each time 
   // through the main loop, it takes care of the 
   // rest for us!
-  menu.update();
+  // only update the menu every half second
+  //if (millis() % 250 <= 50 ) {
+    menu.update();
+  //}
+    // output freq and amplitude settings 
+   // if we are within a tolerance range to the frequency, switch the freq output. this creates oscillations
+  Period = (1.0/float(frequency_levels[frequency_index]))*1000;
+  if (frequency_levels[frequency_index] == 0) {
+    Period = 0;
+  }
+  if (millis() % int(Period) <= 125 ) { // if we are within 4 msec of the time that the current frequency dictates that we switch pin modes...switch pin mode
+   /*
+    if (Freq_State = LOW) {
+      Freq_State = HIGH;
+      digitalWrite(Freq_Pin, Freq_State);
+    }
+    else {
+      Freq_State = LOW;
+      digitalWrite(Freq_Pin, Freq_State);
+    }
+    */
+
+    
+    Freq_State = not Freq_State;
+    digitalWrite(Freq_Pin, Freq_State);
+    digitalWrite(Freq_Pin_2, not Freq_State);
+    /*
+    Serial.print("hi ");
+    Serial.print(Freq_State);
+    Serial.print(" ");
+    Serial.print(not Freq_State);
+    Serial.print(" ");
+    Serial.println(millis());
+    */
+    }
+    
+    /*
+    Serial.print(freq_incr);
+    Serial.print(" ");
+    Serial.print(Frequency);
+    Serial.print(" ");
+    Serial.print(int(Period));
+    Serial.print(" ");    
+    Serial.println(millis() % int(Period));
+    */
+    // update Amplitude output
+    analogWrite(Amp_Pin, (amplitude_index/10)*255);  // Amplitude value has to be converted to pwm range, which is from 0--> 255
+    //Serial.println((float(amplitude_index)/10.0)*255);
+    /*
+    Serial.print(frequency_index);
+    Serial.print(" ");
+    Serial.print(frequency_levels[frequency_index]);
+    Serial.print(" ");
+    Serial.print(int(Period));
+    Serial.print(" ");    
+    Serial.println(millis() % int(Period));
+    */
+    
 }
 
