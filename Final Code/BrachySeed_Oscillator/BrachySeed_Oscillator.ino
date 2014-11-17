@@ -46,9 +46,12 @@ float amp_max = 5;    // maximum amplitude value
 float amp_min = 0;    // minimum aplitude value
 
 //ouput pins
-int Amp_Pin = 3;    // PWM enabled output pins. for Amplitude adjustments
-int Freq_Pin = 8;    // Digital pin. for Frequency adjustments
-int Freq_Pin_2 = 12; // Digital pin for the other half wave of the frequency adjustment pulses to the H bridge
+const int Amp_Pin = 3;    // PWM enabled output pins. for Amplitude adjustments
+const int Freq_Pin = 8;    // Digital pin. for Frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin 4, but connects the h bridge path with pin 3
+const int Freq_Pin_2 = 12; // Digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 3, but connects the h bridge path with pin 4
+const int Freq_Pin_3 = 5;  // digital pin for frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin 2, but connects the h bridge path with pin 1 
+const int Freq_Pin_4 = 6;  // digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 1, but connects the h bridge path with pin 2 
+
 boolean Freq_State;    // on/off state of frequency modulating pin
 
 
@@ -62,6 +65,8 @@ void setup() {
   pinMode(Freq_Pin, OUTPUT);
   
   pinMode(Freq_Pin_2, OUTPUT);
+  pinMode(Freq_Pin_3, OUTPUT);
+  pinMode(Freq_Pin_4, OUTPUT);
   
   // Debugging output
   Serial.begin(9600);
@@ -85,8 +90,10 @@ Amplitude = 2.5;  // At default state, current to magnet is half of pwm range
 
 // Define default frequency pin states
 Freq_State = HIGH;   // at Defualt, current is ON!: Magnet is on, oscillating at 0 Hz
-digitalWrite(Freq_Pin, Freq_State);
-digitalWrite(Freq_Pin_2, not Freq_State);
+digitalWrite(Freq_Pin, not Freq_State);
+digitalWrite(Freq_Pin_2, Freq_State);
+digitalWrite(Freq_Pin_3, not Freq_State);
+digitalWrite(Freq_Pin_4, Freq_State);
 
 // Display defaults
 // (note: line 1 is the second row, since counting begins with 0):
@@ -176,7 +183,7 @@ void loop() {
   if (Frequency == 0) {
     Period = 0;
   }
-  if (millis() % int(Period) <= 2 ) { // if we are within 4 msec of the time that the current frequency dictates that we switch pin modes...switch pin mode
+  if (millis() % int(Period) <= 5 ) { // if we are within 4 msec of the time that the current frequency dictates that we switch pin modes...switch pin mode
    /*
     if (Freq_State = LOW) {
       Freq_State = HIGH;
@@ -190,8 +197,20 @@ void loop() {
 
     
     Freq_State = not Freq_State;
-    digitalWrite(Freq_Pin, Freq_State);
-    digitalWrite(Freq_Pin_2, not Freq_State);
+    // modulate the frequency pins to switch which side of the H bridge is open. Add a delay BEFORE the new side OPENS to avoid shoot through currents on the transistors
+    if (Freq_State == LOW) {
+      digitalWrite(Freq_Pin, not Freq_State);
+      digitalWrite(Freq_Pin_4, Freq_State);
+      delay(5);   // add a delay to avoid "shot through" current on the transistors
+      digitalWrite(Freq_Pin_2, Freq_State);
+      digitalWrite(Freq_Pin_3, not Freq_State);
+    } else {
+        digitalWrite(Freq_Pin_2, Freq_State);
+        digitalWrite(Freq_Pin_3, not Freq_State);
+        delay(5);   // add a delay to avoid "shot through" current on the transistors
+        digitalWrite(Freq_Pin, not Freq_State);
+        digitalWrite(Freq_Pin_4, Freq_State);
+    }
     
     Serial.print("hi ");
     Serial.print(Freq_State);
