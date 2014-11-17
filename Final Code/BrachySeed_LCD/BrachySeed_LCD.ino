@@ -109,8 +109,7 @@ void setup() {
   glcd.begin(0x18); // Initialise LCD
   delay(10); // Just to be safe
   brightness_index = 1; // Initial brightness
-  set_brightness(0); 
-  show_main(); // Draw main menu
+  set_brightness(1); 
   
   
   // draw Oscillating Seed Logo
@@ -142,9 +141,6 @@ void setup() {
   pinMode(Freq_Pin_3, OUTPUT);
   pinMode(Freq_Pin_4, OUTPUT);
   
-// set default values
-Frequency = 0;     // At default state, magnet does not oscillate
-Amplitude = 2.5;  // At default state, current to magnet is half of pwm range
 
 // Define default frequency pin states
 Freq_State = HIGH;   // at Defualt, current is ON!: Magnet is on, oscillating at 0 Hz
@@ -159,7 +155,9 @@ uint8_t i=0;
 
 // Define default Amplitude output
 analogWrite(Amp_Pin, Amplitude);
-  
+
+show_main(); // Draw main menu 
+
 }
 
 // Draw main menu screen:
