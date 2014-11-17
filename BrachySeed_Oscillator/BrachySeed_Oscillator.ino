@@ -191,7 +191,6 @@ void loop() {
     
     Freq_State = not Freq_State;
     digitalWrite(Freq_Pin, Freq_State);
-    delay(1000);
     digitalWrite(Freq_Pin_2, not Freq_State);
     
     Serial.print("hi ");
