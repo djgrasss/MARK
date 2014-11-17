@@ -48,9 +48,9 @@ float amp_min = 0;    // minimum aplitude value
 //ouput pins
 const int Amp_Pin = 3;    // PWM enabled output pins. for Amplitude adjustments
 const int Freq_Pin = 8;    // Digital pin. for Frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin 4, but connects the h bridge path with pin 3
-const int Freq_Pin_2 = 12; // Digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 3, but connects the h bridge path with pin 4
-const int Freq_Pin_3 = 5;  // digital pin for frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin 2, but connects the h bridge path with pin 1 
-const int Freq_Pin_4 = 6;  // digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 1, but connects the h bridge path with pin 2 
+const int Freq_Pin_2 = 12; // Digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 4, but connects the h bridge path with pin 3
+const int Freq_Pin_3 = 5;  // digital pin for frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin , but connects the h bridge path with pin 3 
+const int Freq_Pin_4 = 6;  // digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 1, but connects the h bridge path with pin 3 
 
 boolean Freq_State;    // on/off state of frequency modulating pin
 
