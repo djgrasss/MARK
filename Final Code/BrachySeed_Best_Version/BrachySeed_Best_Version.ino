@@ -35,7 +35,7 @@ Team MARK - Brachyseed Oscillation
 // Menu controls:
 const int UP_PIN     = 12;  
 const int DOWN_PIN   = 11;  
-const int SELECT_PIN = 4; 
+const int SELECT_PIN = 13; 
 
 int UP;
 int DOWN;
@@ -103,10 +103,10 @@ const int Amp_max = 10;  // Maximum Amplitude.
 //ouput pins
 const int Amp_Pin = 3;    // PWM enabled output pins. for Amplitude adjustments
 
-const int Freq_Pin   = 2;    // Digital pin. for Frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin 4, but connects the h bridge path with pin 3
-const int Freq_Pin_2 = 13; // Digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 3, but connects the h bridge path with pin 4
-const int Freq_Pin_3 = 0;  // digital pin for frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin 2, but connects the h bridge path with pin 1 
-const int Freq_Pin_4 = 1;  // digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 1, but connects the h bridge path with pin 2 
+const int Freq_Pin   = 0;    // Digital pin. for Frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin 4, but connects the h bridge path with pin 3
+const int Freq_Pin_2 = 1; // Digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 3, but connects the h bridge path with pin 4
+const int Freq_Pin_3 = 2;  // digital pin for frequency adjustments of H bridge half 1. Coupled TEMPORALLY with pin 2, but connects the h bridge path with pin 1 
+const int Freq_Pin_4 = 4;  // digital pin for frequency adjustments of H bridge half 2. Coupled TEMPORALLY with pin 1, but connects the h bridge path with pin 2 
 
 boolean Freq_State;    // on/off state of frequency modulating pin
 
@@ -118,6 +118,7 @@ int count;
 float time;  // elapsed time, in seconds
 float sine;
 float sine_last = 1;
+
 void setup() {
     // Debugging output
   int time = millis();
@@ -136,19 +137,19 @@ void setup() {
   glcd.clear();
   glcd.drawbitmap(35, 2,  Icon16_glcd_bmp, 44, 55, BLACK);
   glcd.display();
-  delay(3);
+  delay(3000);
   glcd.clear();
   
   // Draw BrachyVison Logo
    glcd.drawbitmap(0, 12,  logo16_glcd_bmp, 120, 27, BLACK);
    glcd.display();
-   delay(3);  
+   delay(3000);  
    glcd.clear();
     
   // Draw Welcome Message
   glcd.drawstring(0, 2, "Welcome to           BrachyVision Mark 1");
   glcd.display();
-  delay(2);
+  delay(2000);
   glcd.clear();
   
 
@@ -293,8 +294,7 @@ void modulate_output() {
   if (Frequency == 0) {
     Period = 0;
   }
-  //if (millis() % int(Period) <= 2 ) { // if we are within 4 msec of the time that the current frequency dictates that we switch pin modes...switch pin mode
-  //Serial.println(Period);
+
     time = millis()/(1000/6.282);
     sine = sin(time*Frequency)/sqrt(pow(sin(time*Frequency), 2));
     
@@ -318,47 +318,19 @@ void modulate_output() {
           digitalWrite(Freq_Pin_4, Freq_State);
       }
       
-      //digitalWrite(Freq_Pin_2, Freq_State);
-      /*
-      Serial.print("hi ");
-      Serial.print(digitalRead(Freq_Pin_2));
-      Serial.print(" ");
-      Serial.print(Freq_State);
-      Serial.println(" ");
-      Serial.println(millis() % int(Period));
-      delay(2);
-      */
+
     }
     
-    /*
-    Serial.print(freq_incr);
-    Serial.print(" ");
-    Serial.print(Frequency);
-    Serial.print(" ");
-    Serial.print(int(Period));
-    Serial.print(" ");    
-    Serial.println(millis() % int(Period));
-    */
     // update Amplitude output
     analogWrite(Amp_Pin, (amplitude_index/10)*255);  // Amplitude value has to be converted to pwm range, which is from 0--> 255
-    //Serial.println((float(amplitude_index)/10.0)*255);
-    /*
-    Serial.print(frequency_index);
-    Serial.print(" ");
-    Serial.print(frequency_levels[frequency_index]);
-    Serial.print(" ");
-    Serial.print(int(Period));
-    Serial.print(" ");    
-    Serial.println(millis() % int(Period));
-    */
+
     
 
  delay(4);
 }
 
 void loop() {
-  //Serial.print(millis());
-  //Serial.print(" ");
+
   if (count == 0) { 
   glcd.clear();
 // display frequency and amplitude
@@ -409,22 +381,7 @@ void loop() {
    
    // modulate output
   modulate_output(); 
-  //Serial.println(millis());
-  //time = millis()/(1000/6.282);
-  //sine = sin(time)/sqrt(pow(sin(time), 2));
-  /*
-  if (millis() < 15000) {
-    Serial.print(millis());
-    Serial.print(" ");
-    Serial.println(sine);
-  }
-  */
-  //digitalWrite(Freq_Pin_4, HIGH);
-  //delay(500);
-  //digitalWrite(Freq_Pin_4, LOW);
-  //delay(500);
-  
-  
+ 
   
 }
 
