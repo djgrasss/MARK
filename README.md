@@ -1,7 +1,7 @@
 MARK
 ====
 
-Multi-Spectral Prostate Brachyseed Vibrator
+Multi-Spectral Prostate Brachyseed Oscillator
 -------------------------------------------
 
 Team Roles
