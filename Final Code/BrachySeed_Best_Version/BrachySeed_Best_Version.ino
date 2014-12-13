@@ -132,8 +132,7 @@ void setup() {
   //brightness_index = 1; // Initial brightness
   //set_brightness(1); 
   //define initial brightness state
-  analogWrite(BACKLIGHT_LED, (backlight/10.0)*255);
-  
+
   // draw Oscillating Seed Logo
   glcd.clear();
   glcd.drawbitmap(35, 2,  Icon16_glcd_bmp, 44, 55, BLACK);
@@ -323,7 +322,7 @@ void modulate_output() {
     }
     
     // update Amplitude output
-    analogWrite(Amp_Pin, (amplitude_index/10)*255);  // Amplitude value has to be converted to pwm range, which is from 0--> 255
+    analogWrite(Amp_Pin, (Amplitude/Amp_max)*255);  // Amplitude value has to be converted to pwm range, which is from 0--> 255
 
     
 
@@ -331,7 +330,7 @@ void modulate_output() {
 }
 
 void loop() {
-
+ 
   if (count == 0) { 
   glcd.clear();
 // display frequency and amplitude
