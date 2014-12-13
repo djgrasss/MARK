@@ -113,7 +113,7 @@ boolean Freq_State;    // on/off state of frequency modulating pin
 // Define variables I need for menu tracking
 int cursor_loc  = 1;  // defines the cursor position on the menu
 const char icon = '>'; // cursor icon
-float backlight;   // variable to control backlight brighness. varies between 0 and 10
+float backlight = 5;   // variable to control backlight brighness. varies between 0 and 10
 int count;
 float time;  // elapsed time, in seconds
 float sine;
@@ -129,10 +129,10 @@ void setup() {
   pinMode(BACKLIGHT_LED, OUTPUT);
   glcd.begin(0x18); // Initialise LCD
   delay(10); // Just to be safe
-  brightness_index = 1; // Initial brightness
+  //brightness_index = 1; // Initial brightness
   //set_brightness(1); 
-  
-  
+  //define initial brightness state
+
   // draw Oscillating Seed Logo
   glcd.clear();
   glcd.drawbitmap(35, 2,  Icon16_glcd_bmp, 44, 55, BLACK);
@@ -147,7 +147,7 @@ void setup() {
    glcd.clear();
     
   // Draw Welcome Message
-  glcd.drawstring(0, 2, "Welcome to           BrachyVision Mark 1");
+  glcd.drawstring(0, 2, "     Welcome to       BrachyVision Mark 1");
   glcd.display();
   delay(2000);
   glcd.clear();
@@ -322,7 +322,7 @@ void modulate_output() {
     }
     
     // update Amplitude output
-    analogWrite(Amp_Pin, (amplitude_index/10)*255);  // Amplitude value has to be converted to pwm range, which is from 0--> 255
+    analogWrite(Amp_Pin, (Amplitude/Amp_max)*255);  // Amplitude value has to be converted to pwm range, which is from 0--> 255
 
     
 
@@ -330,7 +330,7 @@ void modulate_output() {
 }
 
 void loop() {
-
+ 
   if (count == 0) { 
   glcd.clear();
 // display frequency and amplitude
